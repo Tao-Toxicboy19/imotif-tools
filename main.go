@@ -99,4 +99,5 @@ func main() {
 		fmt.Println("Commit failed:", err)
 		return
 	}
+	fmt.Println("Commit ", finalMessage)
 }
