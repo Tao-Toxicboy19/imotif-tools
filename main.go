@@ -7,9 +7,11 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	figure "github.com/common-nighthawk/go-figure"
+
 )
 
-const version = "v1.0.0"
+const version = "v1.0.1"
 
 func main() {
 	args := os.Args
@@ -20,18 +22,18 @@ func main() {
 		return
 	}
 
-	// --- Handle: commit (explicit) or via alias (e.g., itgc)
-	if len(args) == 1 || (len(args) > 1 && args[1] == "commit") {
+	// --- Handle: commit command
+	if len(args) > 1 && args[1] == "commit" {
 		runCommitPrompt()
 		return
 	}
 
-	// --- Unknown command
-	fmt.Println("Unknown command:", args[1])
-	fmt.Println("Usage:")
-	fmt.Println("  imotif-tools commit        Run interactive commit prompt")
-	fmt.Println("  imotif-tools --version     Show version")
-	os.Exit(1)
+	// --- Default (no args)
+	if len(args) == 1 {
+		myFigure := figure.NewFigure("IMOITF Tools", "", true)
+		myFigure.Print()
+		return
+	}
 }
 
 func runCommitPrompt() {
