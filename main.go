@@ -58,7 +58,7 @@ func main() {
 		Message: "Enter commit message:",
 	}, &commitMsg)
 	if err != nil {
-		fmt.Println("เกิดข้อผิดพลาด:", err)
+		fmt.Println(err)
 		return
 	}
 	commitMsg = strings.TrimSpace(commitMsg)
@@ -74,7 +74,7 @@ func main() {
 		Default: true,
 	}, &doVerify)
 	if err != nil {
-		fmt.Println("เกิดข้อผิดพลาด:", err)
+		fmt.Println(err)
 		return
 	}
 
