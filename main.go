@@ -11,7 +11,7 @@ import (
 	figure "github.com/common-nighthawk/go-figure"
 )
 
-const version = "v1.0.2"
+const version = "v1.0.3"
 
 func main() {
 	args := os.Args
@@ -43,15 +43,28 @@ func main() {
 }
 
 func runCommitPrompt() {
-	// Step 1: Task ID
-	var taskID string
+	// Step 1: Task ID (support multiple)
+	var taskInput string
 	err := survey.AskOne(&survey.Input{
-		Message: "Enter Task NO.:",
-	}, &taskID)
+		Message: "Enter Task NO. (e.g. Task-1 or Task-1,Task-2,Task-3):",
+	}, &taskInput)
 	if err != nil {
-		fmt.Println("เกิดข้อผิดพลาด:", err)
+		fmt.Println(err)
 		return
 	}
+
+	taskInput = strings.TrimSpace(taskInput)
+	if taskInput == "" {
+		fmt.Println("You must enter a Task NO.")
+		return
+	}
+
+	// Split and format task IDs
+	tasks := strings.Split(taskInput, ",")
+	for i, t := range tasks {
+		tasks[i] = strings.TrimSpace(t)
+	}
+	formattedTask := "[" + strings.Join(tasks, ",") + "]"
 
 	// Step 2: Commit type
 	typeMap := map[string]string{
@@ -113,7 +126,7 @@ func runCommitPrompt() {
 	}
 
 	// Step 6: Commit message
-	finalMessage := fmt.Sprintf("[%s] [%s] %s", taskID, commitType, commitMsg)
+	finalMessage := fmt.Sprintf("%s [%s] %s", formattedTask, commitType, commitMsg)
 
 	// Step 7: Run git commit
 	args := []string{"commit", "-m", finalMessage}
@@ -130,6 +143,7 @@ func runCommitPrompt() {
 		return
 	}
 }
+
 
 func runInitAlias() {
 	var shellPath string
