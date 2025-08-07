@@ -1,4 +1,4 @@
-BINARY_NAME=itgc
+BINARY_NAME=imotif-tools
 
 all: build-linux build-mac build-windows
 

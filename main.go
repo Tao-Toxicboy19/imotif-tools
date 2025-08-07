@@ -5,10 +5,36 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
 	"github.com/AlecAivazis/survey/v2"
 )
 
+const version = "v1.0.0"
+
 func main() {
+	args := os.Args
+
+	// --- Handle: --version
+	if len(args) > 1 && (args[1] == "--version" || args[1] == "-v") {
+		fmt.Println("imotif-tools version:", version)
+		return
+	}
+
+	// --- Handle: commit (explicit) or via alias (e.g., itgc)
+	if len(args) == 1 || (len(args) > 1 && args[1] == "commit") {
+		runCommitPrompt()
+		return
+	}
+
+	// --- Unknown command
+	fmt.Println("Unknown command:", args[1])
+	fmt.Println("Usage:")
+	fmt.Println("  imotif-tools commit        Run interactive commit prompt")
+	fmt.Println("  imotif-tools --version     Show version")
+	os.Exit(1)
+}
+
+func runCommitPrompt() {
 	// Step 1: Task ID
 	var taskID string
 	err := survey.AskOne(&survey.Input{
@@ -39,7 +65,7 @@ func main() {
 	}
 	fmt.Println()
 
-	// Step 3: User input commit type
+	// Step 3: Commit type input
 	var inputType string
 	survey.AskOne(&survey.Input{
 		Message: "Enter commit type (e.g. fix, add, ref):",
@@ -67,7 +93,7 @@ func main() {
 		return
 	}
 
-	// Step 5: Confirm verify?
+	// Step 5: Confirm verify
 	var doVerify bool
 	err = survey.AskOne(&survey.Confirm{
 		Message: "Do you want to verify before committing?",
@@ -78,27 +104,24 @@ func main() {
 		return
 	}
 
-	// Step 6: create commit message
+	// Step 6: Commit message
 	finalMessage := fmt.Sprintf("[%s] [%s] %s", taskID, commitType, commitMsg)
 
-
 	// Step 7: Run git commit
-	// Prepare git commit args
 	args := []string{"commit", "-m", finalMessage}
 	if !doVerify {
 		args = append(args, "--no-verify")
 	}
 
-	// Run git commit
 	cmd := exec.Command("git", args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-
 	err = cmd.Run()
 	if err != nil {
 		fmt.Println("Commit failed:", err)
 		return
 	}
+
 	fmt.Println("---------------------")
 	fmt.Println("!!!Commit Success!!!")
 	fmt.Println("---------------------")
