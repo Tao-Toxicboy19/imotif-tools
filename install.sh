@@ -35,35 +35,62 @@ echo ""
 echo "You can now run '$BINARY_NAME' from your terminal!"
 
 # -------------------------
-# Setup alias: itcm -> imotif-tools commit
+# Optional: Setup alias: itcm -> imotif-tools commit
 # -------------------------
 
-# Detect shell
-SHELL_NAME=$(basename "$SHELL")
-
 echo ""
-echo "🔗 Setting up alias: itcm → imotif-tools commit"
+read -p "Do you want to create an alias for 'imotif-tools'? [Y/n]: " addAlias
+addAlias=${addAlias:-Y} # default Y
 
-case "$SHELL_NAME" in
-  bash)
-    SHELL_RC="$HOME/.bashrc"
-    echo "alias itcm='imotif-tools commit'" >> "$SHELL_RC"
-    echo "Alias added to $SHELL_RC"
-    ;;
-  zsh)
-    SHELL_RC="$HOME/.zshrc"
-    echo "alias itcm='imotif-tools commit'" >> "$SHELL_RC"
-    echo "Alias added to $SHELL_RC"
-    ;;
-  fish)
-    FISH_CONFIG="$HOME/.config/fish/config.fish"
-    echo "alias itcm 'imotif-tools commit'" >> "$FISH_CONFIG"
-    echo "Alias added to $FISH_CONFIG"
-    ;;
-  *)
-    echo "Unknown shell: $SHELL_NAME. Please add alias manually:"
-    echo "alias itcm='imotif-tools commit'"
-    ;;
-esac
+if [[ "$addAlias" =~ ^[Yy]$ ]]; then
+  echo ""
+  echo "Choose your shell for alias setup:"
+  echo "  [1] bash"
+  echo "  [2] zsh"
+  echo "  [3] fish"
+  read -p "Enter your shell (bash/zsh/fish): " userShell
+  userShell=$(echo "$userShell" | tr '[:upper:]' '[:lower:]') # to lowercase
 
-echo "Please restart your terminal or run 'source' on your shell config to use 'itcm'"
+  echo ""
+  echo "Setting up alias: itcm → imotif-tools commit"
+
+  case "$userShell" in
+    bash)
+      SHELL_RC="$HOME/.bashrc"
+      if ! grep -Fxq "alias itcm='imotif-tools commit'" "$SHELL_RC"; then
+        echo "alias itcm='imotif-tools commit'" >> "$SHELL_RC"
+        echo "Alias added to $SHELL_RC"
+      else
+        echo "Alias already exists in $SHELL_RC"
+      fi
+      ;;
+    zsh)
+      SHELL_RC="$HOME/.zshrc"
+      if ! grep -Fxq "alias itcm='imotif-tools commit'" "$SHELL_RC"; then
+        echo "alias itcm='imotif-tools commit'" >> "$SHELL_RC"
+        echo "Alias added to $SHELL_RC"
+      else
+        echo "Alias already exists in $SHELL_RC"
+      fi
+      ;;
+    fish)
+      FISH_CONFIG="$HOME/.config/fish/config.fish"
+      if ! grep -Fxq "alias itcm 'imotif-tools commit'" "$FISH_CONFIG"; then
+        echo "alias itcm 'imotif-tools commit'" >> "$FISH_CONFIG"
+        echo "Alias added to $FISH_CONFIG"
+      else
+        echo "Alias already exists in $FISH_CONFIG"
+      fi
+      ;;
+    *)
+      echo "Unknown shell: $userShell"
+      echo "Please add alias manually:"
+      echo "alias itcm='imotif-tools commit'"
+      ;;
+  esac
+
+  echo ""
+  echo "Please restart your terminal or run 'source' on your shell config to use 'itcm'"
+else
+  echo "Skipped creating alias."
+fi
