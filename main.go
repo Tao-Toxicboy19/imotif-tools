@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	figure "github.com/common-nighthawk/go-figure"
-
 )
 
-const version = "v1.0.1"
+const version = "v1.0.2"
 
 func main() {
 	args := os.Args
@@ -25,6 +25,12 @@ func main() {
 	// --- Handle: commit command
 	if len(args) > 1 && args[1] == "commit" {
 		runCommitPrompt()
+		return
+	}
+
+	// --- Handle: init command
+	if len(args) > 1 && args[1] == "init" {
+		runInitAlias()
 		return
 	}
 
@@ -123,8 +129,67 @@ func runCommitPrompt() {
 		fmt.Println("Commit failed:", err)
 		return
 	}
+}
 
-	fmt.Println("---------------------")
-	fmt.Println("!!!Commit Success!!!")
-	fmt.Println("---------------------")
+func runInitAlias() {
+	var shellPath string
+	prompt := &survey.Input{
+		Message: "Enter the path to your shell config file (e.g. ~/.zshrc, ~/.bashrc, ~/.config/fish/config.fish):",
+	}
+	err := survey.AskOne(prompt, &shellPath)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	shellPath = strings.TrimSpace(shellPath)
+	if shellPath == "" {
+		fmt.Println("Shell path is required.")
+		return
+	}
+
+	// Expand ~ to home dir
+	if strings.HasPrefix(shellPath, "~") {
+		home, _ := os.UserHomeDir()
+		shellPath = filepath.Join(home, shellPath[1:])
+	}
+
+	// Prepare alias line
+	var aliasLine string
+	if strings.Contains(shellPath, "fish") {
+		aliasLine = "alias itcm 'imotif-tools commit'"
+	} else {
+		aliasLine = "alias itcm='imotif-tools commit'"
+	}
+
+	// Check if alias already exists
+	content, err := os.ReadFile(shellPath)
+	if err != nil {
+		fmt.Println("Failed to read file:", err)
+		return
+	}
+
+	if strings.Contains(string(content), aliasLine) {
+		fmt.Println("Alias already exists in", shellPath)
+	} else {
+		f, err := os.OpenFile(shellPath, os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			fmt.Println("Cannot write to file:", err)
+			return
+		}
+		defer f.Close()
+
+		if _, err := f.WriteString("\n" + aliasLine + "\n"); err != nil {
+			fmt.Println("Failed to write alias:", err)
+			return
+		}
+		fmt.Println("Alias added to", shellPath)
+	}
+
+	fmt.Println("Please restart your terminal or run:")
+	if strings.Contains(shellPath, "fish") {
+		fmt.Println("source", shellPath)
+	} else {
+		fmt.Println("source", shellPath)
+	}
 }
