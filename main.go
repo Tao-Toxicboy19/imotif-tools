@@ -99,6 +99,4 @@ func main() {
 		fmt.Println("Commit failed:", err)
 		return
 	}
-	
-	fmt.Println("Git commit successful.")
 }
