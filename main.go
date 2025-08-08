@@ -11,7 +11,7 @@ import (
 	figure "github.com/common-nighthawk/go-figure"
 )
 
-const version = "v1.0.3"
+const version = "v1.0.4"
 
 func main() {
 	args := os.Args
@@ -114,25 +114,11 @@ func runCommitPrompt() {
 		return
 	}
 
-	// Step 5: Confirm verify
-	var doVerify bool
-	err = survey.AskOne(&survey.Confirm{
-		Message: "Do you want to verify before committing?",
-		Default: true,
-	}, &doVerify)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	// Step 6: Commit message
+	// Step 5: Commit message
 	finalMessage := fmt.Sprintf("%s [%s] %s", formattedTask, commitType, commitMsg)
 
-	// Step 7: Run git commit
+	// Step 6: Run git commit
 	args := []string{"commit", "-m", finalMessage}
-	if !doVerify {
-		args = append(args, "--no-verify")
-	}
 
 	cmd := exec.Command("git", args...)
 	cmd.Stdout = os.Stdout
