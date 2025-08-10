@@ -2,16 +2,19 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	figure "github.com/common-nighthawk/go-figure"
 )
 
-const version = "v1.0.4"
+const version = "v1.0.5"
 
 func main() {
 	args := os.Args
@@ -24,13 +27,33 @@ func main() {
 
 	// --- Handle: commit command
 	if len(args) > 1 && args[1] == "commit" {
-		runCommitPrompt()
+		if len(args) > 2 {
+			// ใช้ args หลังจาก commit เป็น commit message เลย
+			commitMsg := strings.Join(args[2:], " ")
+			runCommitPrompt(commitMsg)
+			return
+		}
+        fmt.Println("Commit message is empty.")
 		return
 	}
 
 	// --- Handle: init command
 	if len(args) > 1 && args[1] == "init" {
 		runInitAlias()
+		return
+	}
+
+	// --- Handle: Update Version
+	if len(args) > 1 && args[1] == "update" {
+		fmt.Println("Updating imotif-tools...")
+		runUpdateVersion()
+		return
+	}
+
+	// --- Handle: --version
+	if len(args) > 1 && (args[1] == "--version" || args[1] == "-v") {
+		fmt.Println("imotif-tools version:", version)
+		printHelp()
 		return
 	}
 
@@ -42,7 +65,30 @@ func main() {
 	}
 }
 
-func runCommitPrompt() {
+func printHelp() {
+	fmt.Println(`imotif-tools - interactive git commit helper
+
+Usage:
+  imotif-tools                 Show banner & usage
+  imotif-tools commit          Run interactive commit prompt
+  imotif-tools init            Add alias 'itcm' to your shell config
+  imotif-tools update          Self-update to the latest release
+  imotif-tools --version       Show version
+  imotif-tools -h | --help     Show this help
+
+Examples:
+  imotif-tools commit
+  imotif-tools init
+  imotif-tools update
+`)
+}
+
+func runCommitPrompt(msg string) {
+	if strings.TrimSpace(msg) == "" {
+        fmt.Println("Commit message is empty.")
+		return
+	}
+
 	// Step 1: Task ID (support multiple)
 	var taskInput string
 	err := survey.AskOne(&survey.Input{
@@ -78,13 +124,13 @@ func runCommitPrompt() {
 		"CHORE": "Maintenance tasks (e.g., config, build)",
 		"PERF":  "Performance improvements",
 		"FEAT":  "Introduce a new feature",
+		"ISS":   "Work related to a reported issue or bug ticket",
 	}
 
 	fmt.Println("Available Commit Types:")
 	for k, v := range typeMap {
 		fmt.Printf("  [%s] %s\n", k, v)
 	}
-	fmt.Println()
 
 	// Step 3: Commit type input
 	var inputType string
@@ -100,24 +146,9 @@ func runCommitPrompt() {
 	commitType := strings.ToUpper(inputType)
 
 	// Step 4: Commit message
-	var commitMsg string
-	err = survey.AskOne(&survey.Input{
-		Message: "Enter commit message:",
-	}, &commitMsg)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	commitMsg = strings.TrimSpace(commitMsg)
-	if commitMsg == "" {
-		fmt.Println("You must enter a commit message.")
-		return
-	}
+	finalMessage := fmt.Sprintf("%s [%s] %s", formattedTask, commitType, msg)
 
-	// Step 5: Commit message
-	finalMessage := fmt.Sprintf("%s [%s] %s", formattedTask, commitType, commitMsg)
-
-	// Step 6: Run git commit
+	// Step 5: Run git commit
 	args := []string{"commit", "-m", finalMessage}
 
 	cmd := exec.Command("git", args...)
@@ -129,7 +160,6 @@ func runCommitPrompt() {
 		return
 	}
 }
-
 
 func runInitAlias() {
 	var shellPath string
@@ -192,4 +222,71 @@ func runInitAlias() {
 	} else {
 		fmt.Println("source", shellPath)
 	}
+}
+
+func runUpdateVersion() {
+	installPath, err := os.Executable()
+	if err != nil {
+		fmt.Println("Failed to determine current binary path:", err)
+		return
+	}
+
+	OS := runtime.GOOS
+	urlMap := map[string]string{
+		"darwin":  "https://github.com/Tao-Toxicboy19/imotif-tools/releases/latest/download/imotif-tools-macos",
+		"linux":   "https://github.com/Tao-Toxicboy19/imotif-tools/releases/latest/download/imotif-tools-linux",
+		"windows": "https://github.com/Tao-Toxicboy19/imotif-tools/releases/latest/download/imotif-tools.exe",
+	}
+
+	binaryURL, ok := urlMap[OS]
+	if !ok {
+		fmt.Println("Unsupported OS:", OS)
+		return
+	}
+
+	fmt.Println("Downloading latest version from:", binaryURL)
+
+	// Download the file
+	resp, err := http.Get(binaryURL)
+	if err != nil {
+		fmt.Println("Failed to download latest version:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		fmt.Println("Error: received non-200 response:", resp.Status)
+		return
+	}
+
+	// Write to temp file first
+	tmpFile := installPath + ".tmp"
+	out, err := os.Create(tmpFile)
+	if err != nil {
+		fmt.Println("Failed to create temp file:", err)
+		return
+	}
+	_, err = io.Copy(out, resp.Body)
+	out.Close()
+	if err != nil {
+		fmt.Println("Failed to write file:", err)
+		return
+	}
+
+	// Replace old binary
+	err = os.Rename(tmpFile, installPath)
+	if err != nil {
+		fmt.Println("Failed to replace old binary:", err)
+		return
+	}
+
+	// Set execute permission (non-Windows)
+	if OS != "windows" {
+		if err := os.Chmod(installPath, 0755); err != nil {
+			fmt.Println("Failed to set execute permission:", err)
+			return
+		}
+	}
+
+	fmt.Println("imotif-tools updated successfully!")
 }
