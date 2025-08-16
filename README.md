@@ -34,18 +34,36 @@ irm https://raw.githubusercontent.com/Tao-Toxicboy19/imotif-tools/main/install.p
 
 ---
 
+## ⚙️ Configuration (.env)
+
+To use the AI features, create a `.env` file in the root of your project or home directory with the following variables:
+
+```env
+GOOGLE_API_KEY=your_google_api_key
+AI_PROVIDER=gemini
+AI_MODEL=gemini-1.5-flash  # or any supported model
+```
+
+### Notes:
+- `GOOGLE_API_KEY`: Your API key from Google AI Studio (https://makersuite.google.com/)
+- `AI_PROVIDER`: The AI backend to use (`gemini`, `openai`, or `ollama`)
+- `AI_MODEL`: The model name depending on provider (`gemini-1.5-flash`, `gpt-4o`, etc.)
+
+---
+
 ## 🛠️ Setup Alias (Optional)
 
 To shorten the CLI command, you can create an alias like:
 
 ### macOS / Linux (Zsh / Bash / Fish)
-Edit your shell profile (e.g. `~/.zshrc`, `~/.bashrc`, or `~/.config/fish/functions/itcm.fish`) and add:
+Add to your shell profile (e.g. `~/.zshrc`, `~/.bashrc`, or `~/.config/fish/functions/itcm.fish`):
 
 ```bash
 alias itcm='imotif-tools commit'
+alias itmg='imotif-tools magic'
 ```
 
-Then reload your terminal or run:
+Then reload your shell:
 
 ```bash
 source ~/.zshrc  # or ~/.bashrc, depending on your shell
@@ -53,30 +71,27 @@ source ~/.zshrc  # or ~/.bashrc, depending on your shell
 
 ### Windows (PowerShell)
 
-If you see an error like:
-```
-The system cannot find the path specified.
-```
-
-#### Fix:
+If `$PROFILE` doesn't exist:
 ```powershell
 New-Item -ItemType File -Path $PROFILE -Force
 ```
 
-#### Then open it:
+Then open it:
 ```powershell
 notepad $PROFILE
 ```
 
-#### Add this alias function:
+Add:
 ```powershell
 function itcm {
     imotif-tools commit
 }
+function itmg {
+    imotif-tools magic
+}
 ```
 
-Save the file, then restart PowerShell or run:
-
+Then reload PowerShell:
 ```powershell
 . $PROFILE
 ```
@@ -90,8 +105,7 @@ Save the file, then restart PowerShell or run:
 imotif-tools commit "your message"
 ```
 
-or with alias:
-
+Or with alias:
 ```bash
 itcm "your message"
 ```
@@ -122,12 +136,14 @@ imotif-tools --help
 
 ## 🧠 Coming Soon
 
-- More AI providers (e.g. OpenAI, Ollama)
-- Auto-scan diffs
+- More AI providers (OpenAI, Ollama)
 - GitHub/GitLab integration
+- Customizable commit templates
+- Git hook support
 
 ---
 
 Made with ❤️ by [@tao-thewarat](https://github.com/tao-thewarat)
+```
 
-หากคุณมีโครงสร้าง project หรือ feature เพิ่มเติมในอนาคต เช่น custom config, git hooks, หรือ AI models เสริม ก็สามารถเพิ่ม section เพิ่มใน README ได้ต่อเลยครับ
+หากคุณอยากเพิ่มการรองรับ config หลายระดับ (global/local), `.imotifrc` หรือ custom commit type ก็สามารถขยายจากโครงนี้ได้อีกเรื่อย ๆ ครับ ✅
