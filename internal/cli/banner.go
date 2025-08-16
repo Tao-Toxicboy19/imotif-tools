@@ -26,5 +26,6 @@ Usage:
   imotif-tools init            Setup alias
   imotif-tools update          Self-update
   imotif-tools -v              Show version
+  imotif-tools magic           Generate commit message from staged files
 `)
 }
