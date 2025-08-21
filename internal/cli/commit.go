@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -86,8 +87,8 @@ func (c *CommitPrompter) promptCommitType() (string, error) {
 
 func (c *CommitPrompter) runGitCommit(msg string) error {
 	cmd := exec.Command("git", "commit", "-m", msg)
-	cmd.Stdout = nil
-	cmd.Stderr = nil
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
 
