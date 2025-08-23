@@ -1,149 +1,165 @@
-# 🚀 IMOTIF Tools
+# 🚀 IMOTIF Tools – v1.0.9
 
-> Generate Git commit messages interactively, quickly, and consistently.
+> Generate Git commit messages interactively, quickly, and consistently.  
+> Plus, run Odoo addon tests directly from your CLI.
 
-`imotif-tools` is a cross-platform CLI tool that helps developers craft standardized commit messages via an interactive prompt or directly from the command line.
+`imotif-tools` is a cross-platform CLI tool that helps developers craft standardized commit messages, generate messages using AI, and now — run addon tests with Docker for Odoo.
 
 ---
 
 ## ✨ Features
 
 - 🔍 **Interactive Prompt** for Task ID, commit type, and message
-- 🧠 Built-in support for common commit types (e.g. `FIX`, `ADD`, `REF`, `FEA`, `ISS`)
-- 🤖 **AI-generated commit messages** with Gemini or other providers
-- 🆔 Supports **multiple Task IDs** in one commit (e.g. `OD-1,OD-2,OD-3`)
-- ✅ Optional commit verification (`--no-verify` support)
-- 💬 Clean and readable CLI UX
+- 🧠 **AI-powered commit generation** with Gemini (OpenAI support coming soon)
+- 🆔 Multiple Task IDs per commit (e.g. `OD-1,OD-2`)
+- ✅ Optional `--no-verify` commit
+- 🧪 **Run Odoo unit tests** with `imotif-tools test <addons>`
 - 🛠️ Works on **macOS**, **Linux**, and **Windows**
 - 📦 Built-in **self-update** mechanism
-- ⚡ CLI **alias support** (e.g. `itcm`)
+- ⚡ CLI alias support (e.g. `itcm`)
 
 ---
 
 ## 📦 Installation
 
 ### macOS / Linux
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Tao-Toxicboy19/imotif-tools/main/install.sh | bash
-```
+````
 
 ### Windows (PowerShell)
+
 ```powershell
 irm https://raw.githubusercontent.com/Tao-Toxicboy19/imotif-tools/main/install.ps1 | iex
 ```
 
 ---
 
-## ⚙️ Configuration (.env)
+## ⚙️ Environment Setup
 
-To use the AI features, create a `.env` file in the root of your project or home directory with the following variables:
+Create a `.env` file in the root directory (same location as your binary), and add:
 
-```env
-GOOGLE_API_KEY=your_google_api_key
-AI_PROVIDER=gemini
-AI_MODEL=gemini-1.5-flash  # or any supported model
 ```
-
-### Notes:
-- `GOOGLE_API_KEY`: Your API key from Google AI Studio (https://makersuite.google.com/)
-- `AI_PROVIDER`: The AI backend to use (`gemini`, `openai`, or `ollama`)
-- `AI_MODEL`: The model name depending on provider (`gemini-1.5-flash`, `gpt-4o`, etc.)
+GOOGLE_API_KEY=your_gemini_key
+AI_PROVIDER=gemini
+AI_MODEL=gemini-pro
+```
 
 ---
 
-## 🛠️ Setup Alias (Optional)
+## 🧪 Run Unit Tests (Odoo Addons)
 
-To shorten the CLI command, you can create an alias like:
-
-### macOS / Linux (Zsh / Bash / Fish)
-Add to your shell profile (e.g. `~/.zshrc`, `~/.bashrc`, or `~/.config/fish/functions/itcm.fish`):
+Use this command to run unit tests for any Odoo addon using Docker Compose:
 
 ```bash
-alias itcm='imotif-tools commit'
-alias itmg='imotif-tools magic'
+imotif-tools test addons
 ```
 
-Then reload your shell:
+You can also run multiple addons by separating with commas:
 
 ```bash
-source ~/.zshrc  # or ~/.bashrc, depending on your shell
+imotif-tools test addons,addons
 ```
 
-### Windows (PowerShell)
+Behind the scenes, this uses Docker Compose with:
 
-If `$PROFILE` doesn't exist:
-```powershell
-New-Item -ItemType File -Path $PROFILE -Force
-```
+* Database: `odoo_test`
+* Addons path: `/mnt/imbase/addons,/mnt/imbase/additional-addons`
+* Coverage enabled with `pytest`
 
-Then open it:
-```powershell
-notepad $PROFILE
-```
-
-Add:
-```powershell
-function itcm {
-    imotif-tools commit
-}
-function itmg {
-    imotif-tools magic
-}
-```
-
-Then reload PowerShell:
-```powershell
-. $PROFILE
-```
+> 🔁 Automatically rebuilds and stops on container exit.
 
 ---
 
 ## 🚀 Usage
 
-### Start interactive commit:
+### Start interactive commit
+
 ```bash
-imotif-tools commit "your message"
+imotif-tools commit
 ```
 
-Or with alias:
+or use alias (after setup):
+
 ```bash
-itcm "your message"
+itcm
 ```
 
-### Auto-generate commit message with AI:
+### Auto-generate commit message with AI
+
 ```bash
 imotif-tools magic
 ```
 
-> You’ll get a suggested commit message from your staged code. You can confirm or edit it.
+> Suggests a commit message from staged code. You can confirm or edit it before committing.
 
----
+### Update CLI
 
-## 🔄 Self-update
 ```bash
 imotif-tools update
 ```
 
 ---
 
-## 📖 Help
+## 🛠️ Alias Setup (Optional)
+
+To quickly access `imotif-tools`, create an alias:
+
+### macOS / Linux (Zsh / Bash / Fish)
+
+Add to `~/.zshrc` / `~/.bashrc` / `~/.config/fish/functions/itcm.fish`:
 
 ```bash
-imotif-tools --help
+alias itcm='imotif-tools commit'
+```
+
+Then reload:
+
+```bash
+source ~/.zshrc
+```
+
+### Windows (PowerShell)
+
+```powershell
+function itcm {
+    imotif-tools commit
+}
+```
+
+Add that inside your `$PROFILE`, then run:
+
+```powershell
+. $PROFILE
 ```
 
 ---
 
 ## 🧠 Coming Soon
 
-- More AI providers (OpenAI, Ollama)
-- GitHub/GitLab integration
-- Customizable commit templates
-- Git hook support
+* OpenAI & Ollama support
+* Auto-scan diffs
+* GitHub/GitLab integration
+* Git hooks and custom configs
 
 ---
 
+## 🧪 Known Limitations
+
+* Only supports staged files (`git add .`)
+* AI commit supports Gemini only (currently)
+* No rollback after commit (use `git commit --amend`)
+* Docker must be installed for `test` command
+
+---
+
+## 🙏 Thank You
+
+Thanks for trying `imotif-tools`!
 Made with ❤️ by [@tao-thewarat](https://github.com/tao-thewarat)
+
 ```
 
-หากคุณอยากเพิ่มการรองรับ config หลายระดับ (global/local), `.imotifrc` หรือ custom commit type ก็สามารถขยายจากโครงนี้ได้อีกเรื่อย ๆ ครับ ✅
+หากคุณมีโฟลเดอร์ `docs/` อยู่ในโปรเจกต์ แนะนำให้วางไฟล์นี้ไว้ที่ `docs/README.md` ด้วยเช่นกันครับ ✍️
+```
