@@ -7,38 +7,51 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/imotif-tools/pkg/text"
 )
 
-type CommitPrompter struct {}
-
-func NewCommitPrompter() *CommitPrompter {
-	return &CommitPrompter{}
+type CommitPrompter struct {
+	args []string
 }
 
-func (c *CommitPrompter) Run(msg string) (string, error) {
-	if msg == "" {
-		return "", fmt.Errorf("commit message is empty")
+func NewCommitPrompter(args []string) *CommitPrompter {
+	return &CommitPrompter{
+		args: args,
 	}
+}
 
+func (c *CommitPrompter) RunCommit(msg ...string) error {
+	var message string
+	if len(msg) > 0 {
+		fmt.Println("Using commit message:", msg[0])
+		message = msg[0]
+	} else {
+		parser := text.NewParser(c.args)
+		msg, err := parser.Parse("commit message is required")
+		if err != nil {
+			return err
+		}
+		message = msg
+	}
 	taskInput, err := c.promptTaskID()
 	if err != nil {
-		return "", err
+		return err
 	}
 	formattedTask := c.formatTaskID(taskInput)
 
 	commitType, err := c.promptCommitType()
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	finalMessage := fmt.Sprintf("%s [%s] %s", formattedTask, commitType, msg)
+	finalMessage := fmt.Sprintf("%s [%s] %s", formattedTask, commitType, message)
 
 	err = c.runGitCommit(finalMessage)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return finalMessage, nil
+	return nil
 }
 
 func (c *CommitPrompter) promptTaskID() (string, error) {

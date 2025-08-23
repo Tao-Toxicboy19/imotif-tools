@@ -1,20 +1,18 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/imotif-tools/internal/ai"
 	"github.com/imotif-tools/internal/cli"
 	"github.com/imotif-tools/internal/config"
-	"github.com/imotif-tools/internal/git"
+	"github.com/imotif-tools/internal/odoo"
 	"github.com/imotif-tools/internal/update"
 )
 
-const version = "v1.0.8"
+const version = "v1.0.9"
 
 func main() {
 	args := os.Args
@@ -36,82 +34,39 @@ func main() {
 		banner := cli.NewBanner()
 		banner.PrintHelp()
 		return
+	case "test":
+		odoo := odoo.NewTester(args)
+		if err := odoo.RunTest(); err != nil {
+			log.Fatal("Failed to run test: ", err)
+		}
+		return
 	case "commit":
-		{
-			if len(args) > 2 {
-				// Init Commit Prompter
-				prompter := cli.NewCommitPrompter()
-				msg := strings.Join(args[2:], " ")
-				if strings.TrimSpace(msg) == "" {
-					fmt.Println("Commit message is empty.")
-					return
-				}
-				msg, err := prompter.Run(msg)
-				if err != nil {
-					log.Fatal("Failed to run commit prompt:", err)
-				}
-				fmt.Println(msg)
-			} else {
-				fmt.Println("Commit message is empty.")
-			}
-			return
+		prompter := cli.NewCommitPrompter(args)
+		if err := prompter.RunCommit(); err != nil {
+			log.Fatal("Failed to run commit prompt: ", err)
 		}
+		return
 	case "init":
-		{
-			// Init AliasInitializer
-			initializer := cli.NewAliasInitializer()
-			initializer.Run()
-			return
-		}
+		// Init AliasInitializer
+		initializer := cli.NewAliasInitializer()
+		initializer.Run()
+		return
 	case "update":
-		{
-			// Init SelfUpdater
-			selfUpdater, err := update.NewSelfUpdater()
-			if err != nil {
-				log.Fatal("Failed to create self updater:", err)
-			}
-			fmt.Println("Updating imotif-tools...")
-			selfUpdater.Run()
-			return
+		// Init SelfUpdater
+		selfUpdater, err := update.NewSelfUpdater()
+		if err != nil {
+			log.Fatal("Failed to create self updater: ", err)
 		}
+		fmt.Println("Updating imotif-tools...")
+		selfUpdater.Run()
+		return
 	case "magic":
-		{
-			// Init GitExec
-			exec := git.NewGitExec()
-			// Get staged files with content
-			files, err := exec.GetStagedFilesWithContent()
-			if err != nil {
-				log.Fatal("Failed to get staged files:", err)
-			}
-
-			if len(files) == 0 {
-				log.Fatal("No staged files found.")
-			}
-			// Load ENV config (MODEL, API_KEY)
-			cfg := config.Load()
-			// Init AI provider (Gemini)
-			provider := ai.NewGeminiProvider(cfg.Model, cfg.APIKey)
-			fmt.Println("Generating commit message...")
-			// Generate commit message from file content
-			genMsg, err := provider.Suggest(context.Background(), files)
-			if err != nil {
-				log.Fatal("AI failed to generate commit message:", err)
-			}
-			fmt.Println("Generated commit message:", genMsg)
-			// Run commit prompt
-			prompter := cli.NewCommitPrompter()
-			// Verify commit message
-			verifiedMsg, err := prompter.ConfirmOrEditMessage(genMsg)
-			if err != nil {
-				log.Fatal("Failed to verify commit message:", err)
-			}
-			// Run commit
-			_, err = prompter.Run(verifiedMsg)
-			if err != nil {
-				log.Fatal("Failed to run commit prompt:", err)
-			}
-			return
+		cfg := config.Load()
+		ai := ai.NewGeminiProvider(cfg.Model, cfg.APIKey)
+		if err := ai.RunCommand(); err != nil {
+			log.Fatal("Failed to run AI command: ", err)
 		}
+		return
 	default:
 		fmt.Println("Invalid command.")
 		return
